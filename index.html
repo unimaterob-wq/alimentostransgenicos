@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Importância das Alimentações Transgênicas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&display=swap');
+        
+        body {
+            background-color: #0d1117;
+            color: #f0f6fc;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .pixel-font {
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        canvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #161b22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(750px) rotate(360deg); opacity: 0; }
+        }
+
+        .falling-grape {
+            position: absolute;
+            font-size: 2.2rem;
+            animation: fall 3s linear infinite;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-slate-950">
+
+    <!-- Game Container Wrapper -->
+    <div id="game-wrapper" class="relative w-full h-screen max-w-[1280px] max-h-[720px] shadow-2xl overflow-hidden rounded-xl border-2 border-slate-800 bg-black flex items-center justify-center">
+
+        <!-- Main Game Canvas -->
+        <canvas id="gameCanvas" width="1024" height="576" class="w-full h-full object-contain"></canvas>
+
+        <!-- Grape Particles Container for Win Screen -->
+        <div id="grape-container" class="absolute inset-0 pointer-events-none overflow-hidden z-40 hidden"></div>
+
+        <!-- Objectives Banner -->
+        <div id="hud-banner" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-slate-900/90 border-2 border-emerald-500 text-emerald-300 px-5 py-2 rounded-full text-xs sm:text-sm font-semibold tracking-wide flex items-center gap-3 shadow-xl backdrop-blur-md z-10">
+            <span class="animate-ping w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            <span id="hud-text">Atravesse a rua com cuidado e examine as 3 bancadas na outra calçada!</span>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div id="touch-controls" class="hidden absolute bottom-6 left-6 z-20 grid grid-cols-3 gap-2 w-36 h-36 opacity-70 hover:opacity-100 transition-opacity">
+            <div></div>
+            <button id="btn-up" class="bg-slate-800 border-2 border-emerald-500 text-white font-bold rounded-lg flex items-center justify-center active:bg-emerald-600 text-xl">▲</button>
+            <div></div>
+            <button id="btn-left" class="bg-slate-800 border-2 border-emerald-500 text-white font-bold rounded-lg flex items-center justify-center active:bg-emerald-600 text-xl">◀</button>
+            <button id="btn-down" class="bg-slate-800 border-2 border-emerald-500 text-white font-bold rounded-lg flex items-center justify-center active:bg-emerald-600 text-xl">▼</button>
+            <button id="btn-right" class="bg-slate-800 border-2 border-emerald-500 text-white font-bold rounded-lg flex items-center justify-center active:bg-emerald-600 text-xl">▶</button>
+        </div>
+
+        <button id="btn-touch-action" class="hidden absolute bottom-8 right-8 z-20 w-16 h-16 bg-amber-500 border-4 border-amber-300 text-slate-950 font-bold rounded-full flex items-center justify-center active:bg-amber-400 text-xl shadow-lg pixel-font">E</button>
+
+        <!-- Start Screen -->
+        <div id="menu-start" class="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-emerald-950 flex flex-col items-center justify-between p-8 z-30">
+            <div class="text-center mt-4">
+                <span class="text-xs pixel-font uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-4 py-1.5 rounded-full border border-emerald-500/50 shadow-inner">
+                    Mini-Game Educativo 2D
+                </span>
+                <h1 class="text-xl sm:text-2xl md:text-3xl text-amber-400 pixel-font mt-4 leading-relaxed drop-shadow-[0_5px_15px_rgba(245,158,11,0.4)]">
+                    A Importância das<br><span class="text-emerald-400">Alimentações Transgênicas</span>
+                </h1>
+                <p class="text-slate-300 text-sm md:text-base mt-2 max-w-xl mx-auto font-medium">
+                    Acompanhe Robson, Dra. Elena e Seu Ribamar em uma jornada pela biotecnologia dos alimentos!
+                </p>
+            </div>
+
+            <div class="flex flex-col gap-3 w-full max-w-xs my-auto">
+                <button id="btn-play" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold pixel-font text-xs sm:text-sm rounded-xl border-2 border-emerald-200 shadow-xl transition transform hover:scale-105 active:scale-95 cursor-pointer">
+                    ▶ INICIAR JOGO
+                </button>
+                <button id="btn-settings" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold pixel-font text-xs rounded-xl border border-slate-600 shadow transition cursor-pointer">
+                    ⚙️ CONFIGURAÇÕES DE ÁUDIO
+                </button>
+                <button id="btn-instructions" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold pixel-font text-xs rounded-xl border border-slate-600 shadow transition cursor-pointer">
+                    📖 INSTRUÇÕES
+                </button>
+                <button id="btn-credits" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold pixel-font text-xs rounded-xl border border-slate-600 shadow transition cursor-pointer">
+                    📜 CRÉDITOS
+                </button>
+            </div>
+
+            <div class="text-slate-400 text-xs pixel-font text-center">
+                Movimentação: <span class="text-amber-400">WASD / Setas</span> • Interagir: <span class="text-amber-400">Tecla E</span>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="modal-settings" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-40 p-6">
+            <div class="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-5">
+                <h2 class="text-lg text-amber-400 pixel-font text-center border-b border-slate-800 pb-3">⚙️ Configurações de Áudio</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold text-slate-300 mb-1">
+                            <span>Música Stardew Valley (BGM)</span>
+                            <span id="bgm-val">60%</span>
+                        </div>
+                        <input type="range" id="slider-bgm" min="0" max="100" value="60" class="w-full accent-emerald-500 cursor-pointer">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold text-slate-300 mb-1">
+                            <span>Efeitos Sonoros (SFX)</span>
+                            <span id="sfx-val">80%</span>
+                        </div>
+                        <input type="range" id="slider-sfx" min="0" max="100" value="80" class="w-full accent-emerald-500 cursor-pointer">
+                    </div>
+
+                    <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl">
+                        <span class="text-sm font-semibold text-slate-200">Silenciar Áudio (Mute)</span>
+                        <input type="checkbox" id="chk-mute" class="w-5 h-5 accent-emerald-500 cursor-pointer">
+                    </div>
+                </div>
+
+                <button id="btn-close-settings" class="mt-2 w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold pixel-font text-xs rounded-xl cursor-pointer">
+                    SALVAR & VOLTAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Instructions Modal -->
+        <div id="modal-instructions" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-40 p-6">
+            <div class="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-4">
+                <h2 class="text-lg text-amber-400 pixel-font text-center border-b border-slate-800 pb-2">📖 Como Jogar</h2>
+                
+                <ul class="text-slate-300 text-sm space-y-2.5 leading-relaxed">
+                    <li>🎮 <strong class="text-emerald-400">Movimentação:</strong> Ande com Robson usando <span class="text-amber-400">WASD</span> ou <span class="text-amber-400">Setas</span>.</li>
+                    <li>💬 <strong class="text-emerald-400">Interação:</strong> Pressione <span class="text-amber-400">E</span> perto de pessoas, bancadas ou lavouras.</li>
+                    <li>🚗 <strong class="text-amber-400">CIDADE:</strong> As bancadas estão na outra calçada! Cuidado com os carros em movimento!</li>
+                    <li>🐷 <strong class="text-red-400">FAZENDA:</strong> Cuidado com o cercado dos animais do Seu Ribamar... eles mordem!</li>
+                    <li>🍇 <strong class="text-emerald-400">COLHEITA:</strong> Colha as 12 plantações nas 4 áreas perto da casa e devolva ao Ribamar!</li>
+                </ul>
+
+                <button id="btn-close-instructions" class="mt-2 w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold pixel-font text-xs rounded-xl cursor-pointer">
+                    ENTENDI
+                </button>
+            </div>
+        </div>
+
+        <!-- Credits Modal -->
+        <div id="modal-credits" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-40 p-6">
+            <div class="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-6 w-full max-w-md shadow-2xl flex flex-col gap-4 text-center">
+                <h2 class="text-lg text-amber-400 pixel-font border-b border-slate-800 pb-2">📜 Créditos</h2>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    Jogo Educativo 2D sobre Biotecnologia Agrícola e Alimentos Transgênicos.<br><br>
+                    <strong class="text-emerald-400">Personagens:</strong> Robson, Dra. Elena e Seu Ribamar.<br>
+                    <strong class="text-amber-400">Músicas & Sons:</strong> Produzidos por Síntese Web Audio API.
+                </p>
+
+                <button id="btn-close-credits" class="mt-2 w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold pixel-font text-xs rounded-xl cursor-pointer">
+                    FECHAR
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="screen-gameover" class="hidden absolute inset-0 bg-black/95 flex flex-col items-center justify-center p-6 text-center z-50 backdrop-blur-md">
+            <div class="text-7xl mb-4 animate-bounce">🚗💥😵</div>
+            <h2 class="text-2xl sm:text-3xl text-red-500 pixel-font mb-3 drop-shadow-[0_4px_12px_rgba(239,68,68,0.8)]">Fim de jogo</h2>
+            <p class="text-amber-200 text-base md:text-lg mb-8 max-w-md font-medium">Robson foi atropelado ao atravessar a rua fora de hora!</p>
+            
+            <button id="btn-restart" class="px-8 py-4 bg-red-600 hover:bg-red-500 text-white font-bold text-xs sm:text-sm rounded-xl border-2 border-amber-300 shadow-2xl transition transform hover:scale-105 active:scale-95 pixel-font cursor-pointer">
+                Fim de jogo, clique novamente para jogar
+            </button>
+        </div>
+
+        <!-- WIN SCREEN -->
+        <div id="screen-win" class="hidden absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center p-6 text-center z-50 backdrop-blur-md">
+            <div class="text-8xl mb-4 animate-bounce">🍇✨🌾</div>
+            <h2 class="text-2xl sm:text-4xl text-amber-400 pixel-font mb-6 drop-shadow-[0_4px_20px_rgba(245,158,11,0.9)]">PARABÉNS!</h2>
+            
+            <div class="bg-slate-900 border-4 border-emerald-500 p-8 rounded-3xl max-w-2xl mb-8 shadow-2xl backdrop-blur-xl">
+                <p class="text-emerald-300 text-xl sm:text-2xl font-bold pixel-font leading-relaxed mb-4">
+                    "Você GANHOU o jogo e uma caixa de uva"
+                </p>
+                <p class="text-amber-300 text-lg sm:text-xl font-bold pixel-font">
+                    muito obrigado pela atenção
+                </p>
+            </div>
+            
+            <button id="btn-win-replay" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm rounded-xl border-2 border-emerald-200 shadow-2xl transition transform hover:scale-105 active:scale-95 pixel-font cursor-pointer">
+                🔄 JOGAR NOVAMENTE
+            </button>
+        </div>
+
+        <!-- Cutscene Overlay Banner -->
+        <div id="cutscene-banner" class="hidden absolute top-8 left-1/2 transform -translate-x-1/2 bg-slate-950/95 border-2 border-emerald-400 text-emerald-300 px-6 py-3.5 rounded-xl text-xs sm:text-sm font-bold pixel-font shadow-2xl z-20 text-center animate-pulse">
+            🚗 VIAGEM EM ANDAMENTO: DRA. ELENA E ROBSON INDO PARA A FAZENDA...
+        </div>
+
+        <!-- Dialogue Box -->
+        <div id="dialogue-box" class="hidden absolute bottom-4 left-4 right-4 bg-gradient-to-b from-amber-950 via-amber-900 to-stone-900 border-4 border-amber-600 rounded-2xl p-4 shadow-2xl flex flex-col md:flex-row items-center gap-4 border-double z-30">
+            <div id="dialogue-avatar-box" class="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-amber-950 border-2 border-amber-500 flex-shrink-0 flex items-center justify-center overflow-hidden shadow-inner">
+                <canvas id="avatarCanvas" width="80" height="80" class="w-full h-full"></canvas>
+            </div>
+            <div class="flex-1 w-full flex flex-col justify-between h-full min-h-[80px]">
+                <div>
+                    <h3 id="dialogue-speaker" class="text-amber-400 font-bold text-sm md:text-base pixel-font tracking-wide">Robson</h3>
+                    <p id="dialogue-text" class="text-amber-100 text-base md:text-lg leading-snug mt-1 font-medium min-h-[2.5rem]"></p>
+                </div>
+                
+                <div id="dialogue-prompt" class="text-right text-amber-400 text-[10px] md:text-xs pixel-font animate-bounce mt-2">
+                    [ Pressione 'E' para continuar ▶ ]
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Main Game Script -->
+    <script>
+        // --- WEB AUDIO API PROCEDURAL SOUND ENGINE ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.bgmVolume = 0.6;
+                this.sfxVolume = 0.8;
+                this.isMuted = false;
+                this.bgmTimer = null;
+                this.isPlayingBGM = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playSFX(type) {
+                if (this.isMuted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                const vol = this.sfxVolume;
+
+                if (type === 'step') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(120, now);
+                    osc.frequency.exponentialRampToValueAtTime(40, now + 0.08);
+                    gain.gain.setValueAtTime(vol * 0.12, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'talk') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(280 + Math.random() * 80, now);
+                    gain.gain.setValueAtTime(vol * 0.08, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'harvest') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+                    gain.gain.setValueAtTime(vol * 0.35, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
+                    gain.gain.setValueAtTime(vol * 0.5, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'bite') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(350, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.25);
+                    gain.gain.setValueAtTime(vol * 0.4, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'pig') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(180, now + 0.2);
+                    gain.gain.setValueAtTime(vol * 0.3, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                } else if (type === 'win') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.15);
+                    osc.frequency.setValueAtTime(783.99, now + 0.3);
+                    gain.gain.setValueAtTime(vol * 0.4, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            }
+
+            startBGM() {
+                if (this.isPlayingBGM) return;
+                this.init();
+                this.isPlayingBGM = true;
+
+                const notes = [
+                    261.63, 329.63, 392.00, 523.25,
+                    220.00, 261.63, 329.63, 440.00,
+                    174.61, 220.00, 261.63, 349.23,
+                    196.00, 246.94, 293.66, 392.00
+                ];
+                let noteIdx = 0;
+
+                const playNextNote = () => {
+                    if (!this.isPlayingBGM || this.isMuted) return;
+
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(notes[noteIdx], now);
+
+                    const vol = this.bgmVolume * 0.15;
+                    gain.gain.setValueAtTime(0.01, now);
+                    gain.gain.linearRampToValueAtTime(vol, now + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+
+                    noteIdx = (noteIdx + 1) % notes.length;
+                };
+
+                this.bgmTimer = setInterval(playNextNote, 320);
+            }
+
+            stopBGM() {
+                this.isPlayingBGM = false;
+                if (this.bgmTimer) clearInterval(this.bgmTimer);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        // --- CANVAS ENGINE & GAME VARIABLES ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const avatarCanvas = document.getElementById('avatarCanvas');
+        const avatarCtx = avatarCanvas.getContext('2d');
+
+        // UI Elements
+        const menuStart = document.getElementById('menu-start');
+        const modalSettings = document.getElementById('modal-settings');
+        const modalInstructions = document.getElementById('modal-instructions');
+        const modalCredits = document.getElementById('modal-credits');
+        const screenGameOver = document.getElementById('screen-gameover');
+        const screenWin = document.getElementById('screen-win');
+        const cutsceneBanner = document.getElementById('cutscene-banner');
+        const dialogueBox = document.getElementById('dialogue-box');
+        const dialogueSpeaker = document.getElementById('dialogue-speaker');
+        const dialogueText = document.getElementById('dialogue-text');
+        const hudBanner = document.getElementById('hud-banner');
+        const hudText = document.getElementById('hud-text');
+        const grapeContainer = document.getElementById('grape-container');
+
+        // Game State
+        let currentPhase = 1; // 1: City, 2: Farm
+        let gameState = 'MENU';
+        let keys = {};
+        let dialogueQueue = [];
+        let currentDialogueIndex = 0;
+        let dialogueInterval = null;
+        let isTypewriting = false;
+        let fullCurrentText = "";
+        let onDialogueCompleteCallback = null;
+
+        let harvestedCrops = 0;
+        let animalBittenCooldown = false;
+        let cropsDelivered = false;
+
+        // Player (Robson)
+        const player = {
+            x: 200,
+            y: 80,
+            width: 28,
+            height: 38,
+            speed: 3,
+            direction: 'down',
+            isMoving: false,
+            animFrame: 0,
+            animTimer: 0
+        };
+
+        // Dra. Elena NPC
+        const elena = {
+            x: 820,
+            y: 90,
+            width: 28,
+            height: 38
+        };
+
+        // Seu Ribamar NPC
+        const ribamar = {
+            x: 220,
+            y: 130,
+            width: 30,
+            height: 40
+        };
+
+        // Cutscene Pickup Truck
+        const cutsceneTruck = {
+            x: -120,
+            y: 320,
+            speed: 4.5
+        };
+
+        // Animal Pen Position in Farm
+        const animalPen = {
+            x: 480,
+            y: 260,
+            width: 140,
+            height: 140
+        };
+
+        // City Pedestrians
+        const pedestrians = [
+            { x: 100, y: 150, speed: 1.2, dir: 1, type: 'man' },
+            { x: 600, y: 160, speed: 0.9, dir: -1, type: 'woman' },
+            { x: 300, y: 480, speed: 1.1, dir: 1, type: 'woman' },
+            { x: 800, y: 490, speed: 1.3, dir: -1, type: 'man' }
+        ];
+
+        // Road Cars in City Phase 1
+        const cars = [
+            { x: 100, y: 245, width: 60, height: 28, speed: 4.8, color: '#ef4444' },
+            { x: 500, y: 245, width: 65, height: 28, speed: 5.2, color: '#3b82f6' },
+            { x: 900, y: 295, width: 60, height: 28, speed: -4.2, color: '#eab308' },
+            { x: 300, y: 295, width: 70, height: 28, speed: -5.8, color: '#a855f7' }
+        ];
+
+        // 3 Analysis Benches on the OPPOSITE SIDEWALK
+        const labBenches = [
+            { id: 'bt_corn', x: 180, y: 400, w: 75, h: 42, label: 'Milho Bt Transgênico', talked: false },
+            { id: 'soya', x: 480, y: 400, w: 75, h: 42, label: 'Soja Resistente', talked: false },
+            { id: 'tomato', x: 780, y: 400, w: 75, h: 42, label: 'Tomate Biofortificado', talked: false }
+        ];
+
+        // 4 CROP PATCHES NEAR HOUSE (3 CROPS EACH = 12 TOTAL)
+        const farmCrops = [];
+        // Patch 1: Milho Bt (3 items)
+        farmCrops.push({ x: 260, y: 260, width: 34, height: 34, type: 'Milho Bt', harvested: false });
+        farmCrops.push({ x: 300, y: 260, width: 34, height: 34, type: 'Milho Bt', harvested: false });
+        farmCrops.push({ x: 340, y: 260, width: 34, height: 34, type: 'Milho Bt', harvested: false });
+
+        // Patch 2: Soja Transgênica (3 items)
+        farmCrops.push({ x: 260, y: 305, width: 34, height: 34, type: 'Soja Transgênica', harvested: false });
+        farmCrops.push({ x: 300, y: 305, width: 34, height: 34, type: 'Soja Transgênica', harvested: false });
+        farmCrops.push({ x: 340, y: 305, width: 34, height: 34, type: 'Soja Transgênica', harvested: false });
+
+        // Patch 3: Algodão Transgênico (3 items)
+        farmCrops.push({ x: 260, y: 350, width: 34, height: 34, type: 'Algodão Transgênico', harvested: false });
+        farmCrops.push({ x: 300, y: 350, width: 34, height: 34, type: 'Algodão Transgênico', harvested: false });
+        farmCrops.push({ x: 340, y: 350, width: 34, height: 34, type: 'Algodão Transgênico', harvested: false });
+
+        // Patch 4: Feijão Biofortificado (3 items)
+        farmCrops.push({ x: 260, y: 395, width: 34, height: 34, type: 'Feijão Biofortificado', harvested: false });
+        farmCrops.push({ x: 300, y: 395, width: 34, height: 34, type: 'Feijão Biofortificado', harvested: false });
+        farmCrops.push({ x: 340, y: 395, width: 34, height: 34, type: 'Feijão Biofortificado', harvested: false });
+
+        // Birds Flying in Farm Sky
+        const farmBirds = [
+            { x: 50, y: 40, speed: 1.5 },
+            { x: 180, y: 25, speed: 1.8 },
+            { x: 320, y: 50, speed: 1.3 }
+        ];
+
+        // DIALOGUES DATA
+        const dialoguesData = {
+            phase1_start: [
+                { speaker: "Dra. Elena", avatar: "elena", text: "Olá, Robson! Bem-vindo ao Centro de Biotecnologia Agrícola da Cidade." },
+                { speaker: "Robson", avatar: "robson", text: "Olá Dra. Elena! Onde estão as estações de análise de alimentos?" },
+                { speaker: "Dra. Elena", avatar: "elena", text: "As 3 bancadas de análise ficam do OUTRO LADO da avenida, na outra calçada!" },
+                { speaker: "Dra. Elena", avatar: "elena", text: "Atravesse a rua com muita atenção na faixa e cuidado com os carros!" },
+                { speaker: "Dra. Elena", avatar: "elena", text: "Depois de examinar as 3 bancadas, venha até a minha picape no estacionamento para irmos à fazenda." }
+            ],
+            bench_bt_corn: [
+                { speaker: "Bancada de Análise", avatar: "item", text: "🌽 MILHO Bt (TRANSGÊNICO): Modificado com um gene de bactéria natural do solo que protege contra lagartas, reduzindo drasticamente a necessidade de agrotóxicos no cultivo!" }
+            ],
+            bench_soya: [
+                { speaker: "Bancada de Análise", avatar: "item", text: "🌱 SOJA RESISTENTE A HERBICIDAS: Desenvolvida geneticamente para resistir a ervas daninhas. Permite colheitas mais abundantes mantendo a saúde do solo." }
+            ],
+            bench_tomato: [
+                { speaker: "Bancada de Análise", avatar: "item", text: "🍅 TOMATE BIOFORTIFICADO: Modificado para concentrar maior teor de vitaminas e nutrientes, durando mais tempo nas prateleiras dos mercados!" }
+            ],
+            farm_arrival: [
+                { speaker: "Seu Ribamar", avatar: "ribamar", text: "Olá meus cientistas, vejo que vocês vieram me ajudar com a colheita" },
+                { speaker: "Dra. Elena", avatar: "elena", text: "Vamos Robson, precisamos de sua ajuda, depois te dou uma recompensa" },
+                { speaker: "Dra. Elena", avatar: "elena", text: "Uma caixa de uva" },
+                { speaker: "Robson", avatar: "robson", text: "Oba! Uma caixa de uva! Vou colher as 12 plantas perto da sua casa agora mesmo, Seu Ribamar!" },
+                { speaker: "Seu Ribamar", avatar: "ribamar", text: "Isso mesmo! Temos 4 canteiros com 3 plantas cada, totalizando 12 colheitas! Só tome cuidado com o cercado dos meus bichos ali do lado..." }
+            ],
+            elena_farm_talk: [
+                { speaker: "Dra. Elena", avatar: "elena", text: "Vamos Robson, precisamos de sua ajuda, depois te dou uma recompensa" },
+                { speaker: "Dra. Elena", avatar: "elena", text: "Uma caixa de uva" }
+            ],
+            ribamar_talk: [
+                { speaker: "Seu Ribamar", avatar: "ribamar", text: "Olá meus cientistas, vejo que vocês vieram me ajudar com a colheita" },
+                { speaker: "Seu Ribamar", avatar: "ribamar", text: "Com as sementes biotecnológicas, produzo o dobro de alimentos economizando água e combustível de trator!" }
+            ],
+            animal_bite: [
+                { speaker: "Robson", avatar: "robson", text: "Ai bixo nojento" },
+                { speaker: "Seu Ribamar", avatar: "ribamar", text: "Não chame meus bixos de nojeira n caba safado" }
+            ],
+            deliver_harvest: [
+                { speaker: "Robson", avatar: "robson", text: "Aqui estão todas as 12 colheitas biotecnológicas das suas lavouras, Seu Ribamar!" },
+                { speaker: "Seu Ribamar", avatar: "ribamar", text: "Você conseguiu, você conseguiu, me ajudou a pegar toda a colheita, realmente vocês são bons" },
+                { speaker: "Dra. Elena", avatar: "elena", text: "Excelente trabalho, Robson! Aqui está sua merecida recompensa!" }
+            ]
+        };
+
+        // --- INPUT LISTENERS ---
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            keys[e.key] = true;
+
+            if (e.key === 'e' || e.key === 'E') {
+                handleInteraction();
+            }
+            if (gameState === 'GAMEOVER' && (e.key === 'r' || e.key === 'R')) {
+                restartGame();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+            keys[e.key] = false;
+        });
+
+        // Touch control buttons setup
+        const setupTouchBtn = (id, keyName) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+        };
+        setupTouchBtn('btn-up', 'ArrowUp');
+        setupTouchBtn('btn-down', 'ArrowDown');
+        setupTouchBtn('btn-left', 'ArrowLeft');
+        setupTouchBtn('btn-right', 'ArrowRight');
+
+        document.getElementById('btn-touch-action').addEventListener('click', handleInteraction);
+
+        // Menu Event Handlers
+        document.getElementById('btn-play').addEventListener('click', () => {
+            audio.startBGM();
+            menuStart.classList.add('hidden');
+            gameState = 'PLAYING';
+            hudBanner.classList.remove('hidden');
+            if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                document.getElementById('touch-controls').classList.remove('hidden');
+                document.getElementById('btn-touch-action').classList.remove('hidden');
+            }
+            startDialogue('phase1_start');
+        });
+
+        document.getElementById('btn-settings').addEventListener('click', () => modalSettings.classList.remove('hidden'));
+        document.getElementById('btn-close-settings').addEventListener('click', () => modalSettings.classList.add('hidden'));
+
+        document.getElementById('btn-instructions').addEventListener('click', () => modalInstructions.classList.remove('hidden'));
+        document.getElementById('btn-close-instructions').addEventListener('click', () => modalInstructions.classList.add('hidden'));
+
+        document.getElementById('btn-credits').addEventListener('click', () => modalCredits.classList.remove('hidden'));
+        document.getElementById('btn-close-credits').addEventListener('click', () => modalCredits.classList.add('hidden'));
+
+        document.getElementById('btn-restart').addEventListener('click', restartGame);
+        document.getElementById('btn-win-replay').addEventListener('click', () => location.reload());
+
+        document.getElementById('slider-bgm').addEventListener('input', (e) => {
+            audio.bgmVolume = e.target.value / 100;
+            document.getElementById('bgm-val').innerText = e.target.value + '%';
+        });
+
+        document.getElementById('slider-sfx').addEventListener('input', (e) => {
+            audio.sfxVolume = e.target.value / 100;
+            document.getElementById('sfx-val').innerText = e.target.value + '%';
+        });
+
+        document.getElementById('chk-mute').addEventListener('change', (e) => {
+            audio.isMuted = e.target.checked;
+        });
+
+        dialogueBox.addEventListener('click', handleInteraction);
+
+        // --- DIALOGUE SYSTEM ---
+        function startDialogue(queueKey, onComplete = null) {
+            dialogueQueue = dialoguesData[queueKey] || [];
+            currentDialogueIndex = 0;
+            onDialogueCompleteCallback = onComplete;
+            if (dialogueQueue.length > 0) {
+                gameState = 'DIALOGUE';
+                dialogueBox.classList.remove('hidden');
+                showCurrentDialogue();
+            }
+        }
+
+        function showCurrentDialogue() {
+            if (currentDialogueIndex >= dialogueQueue.length) {
+                dialogueBox.classList.add('hidden');
+                gameState = 'PLAYING';
+                if (onDialogueCompleteCallback) {
+                    onDialogueCompleteCallback();
+                    onDialogueCompleteCallback = null;
+                }
+                return;
+            }
+
+            const current = dialogueQueue[currentDialogueIndex];
+            dialogueSpeaker.innerText = current.speaker;
+            fullCurrentText = current.text;
+            dialogueText.innerText = "";
+            isTypewriting = true;
+
+            drawAvatar(current.avatar);
+
+            if (dialogueInterval) clearInterval(dialogueInterval);
+
+            // Typewriter rendering words with correct spacing preserved
+            const words = fullCurrentText.split(' ');
+            let wordIdx = 0;
+            let currentDisplayedText = "";
+
+            dialogueInterval = setInterval(() => {
+                if (wordIdx < words.length) {
+                    currentDisplayedText += (wordIdx === 0 ? "" : " ") + words[wordIdx];
+                    dialogueText.innerText = currentDisplayedText;
+                    audio.playSFX('talk');
+                    wordIdx++;
+                } else {
+                    clearInterval(dialogueInterval);
+                    isTypewriting = false;
+                }
+            }, 60);
+        }
+
+        function drawAvatar(avatarType) {
+            avatarCtx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+            avatarCtx.fillStyle = '#1e1b4b';
+            avatarCtx.fillRect(0, 0, 80, 80);
+
+            if (avatarType === 'robson') {
+                // Robson Face
+                avatarCtx.fillStyle = '#fca5a5';
+                avatarCtx.fillRect(20, 22, 40, 42);
+                
+                // Brown Hair
+                avatarCtx.fillStyle = '#451a03';
+                avatarCtx.fillRect(16, 12, 48, 18);
+                avatarCtx.fillRect(16, 20, 8, 16);
+                avatarCtx.fillRect(56, 20, 8, 16);
+
+                // Glasses
+                avatarCtx.fillStyle = '#0f172a';
+                avatarCtx.fillRect(22, 32, 16, 12);
+                avatarCtx.fillRect(42, 32, 16, 12);
+                avatarCtx.fillRect(38, 36, 4, 3);
+
+                avatarCtx.fillStyle = '#38bdf8';
+                avatarCtx.fillRect(24, 34, 12, 8);
+                avatarCtx.fillRect(44, 34, 12, 8);
+
+                // Smile
+                avatarCtx.fillStyle = '#7f1d1d';
+                avatarCtx.fillRect(32, 52, 16, 4);
+
+            } else if (avatarType === 'elena') {
+                // Dra. Elena - Hair base
+                avatarCtx.fillStyle = '#881337';
+                avatarCtx.beginPath();
+                avatarCtx.arc(40, 36, 28, Math.PI, 0);
+                avatarCtx.fill();
+                avatarCtx.fillRect(12, 36, 14, 36);
+                avatarCtx.fillRect(54, 36, 14, 36);
+
+                // Face
+                avatarCtx.fillStyle = '#fbcfe8';
+                avatarCtx.fillRect(24, 24, 32, 38);
+
+                // Hair bangs
+                avatarCtx.fillStyle = '#9f1239';
+                avatarCtx.beginPath();
+                avatarCtx.moveTo(12, 32);
+                avatarCtx.quadraticCurveTo(40, 18, 68, 32);
+                avatarCtx.lineTo(68, 22);
+                avatarCtx.quadraticCurveTo(40, 12, 12, 22);
+                avatarCtx.fill();
+
+                // Eyes & Glasses
+                avatarCtx.fillStyle = '#db2777';
+                avatarCtx.fillRect(28, 36, 8, 8);
+                avatarCtx.fillRect(44, 36, 8, 8);
+
+                // Smile
+                avatarCtx.fillStyle = '#be123c';
+                avatarCtx.fillRect(34, 52, 12, 3);
+
+            } else if (avatarType === 'ribamar') {
+                avatarCtx.fillStyle = '#fed7aa';
+                avatarCtx.fillRect(20, 25, 40, 40);
+                avatarCtx.fillStyle = '#fbbf24';
+                avatarCtx.fillRect(10, 15, 60, 15);
+                avatarCtx.fillStyle = '#78350f';
+                avatarCtx.fillRect(25, 48, 30, 8);
+            } else {
+                avatarCtx.fillStyle = '#10b981';
+                avatarCtx.beginPath();
+                avatarCtx.arc(40, 40, 25, 0, Math.PI * 2);
+                avatarCtx.fill();
+            }
+        }
+
+        function handleInteraction() {
+            if (gameState === 'GAMEOVER') {
+                restartGame();
+                return;
+            }
+
+            if (gameState === 'DIALOGUE') {
+                if (isTypewriting) {
+                    clearInterval(dialogueInterval);
+                    dialogueText.innerText = fullCurrentText;
+                    isTypewriting = false;
+                } else {
+                    currentDialogueIndex++;
+                    showCurrentDialogue();
+                }
+                return;
+            }
+
+            if (gameState === 'PLAYING') {
+                if (currentPhase === 1) {
+                    // Check Lab Benches on opposite sidewalk
+                    for (let bench of labBenches) {
+                        const dist = Math.hypot((player.x + player.width/2) - (bench.x + bench.w/2), (player.y + player.height/2) - (bench.y + bench.h/2));
+                        if (dist < 55) {
+                            bench.talked = true;
+                            startDialogue('bench_' + bench.id, checkPhase1Progress);
+                            return;
+                        }
+                    }
+
+                    // Check Elena in parking lot
+                    const elenaDist = Math.hypot((player.x + player.width/2) - (elena.x + elena.width/2), (player.y + player.height/2) - (elena.y + elena.height/2));
+                    if (elenaDist < 55) {
+                        const allExamined = labBenches.every(b => b.talked);
+                        if (allExamined) {
+                            startCutsceneToFarm();
+                        } else {
+                            startDialogue('phase1_start');
+                        }
+                        return;
+                    }
+                } else if (currentPhase === 2) {
+                    // Talk with Dra. Elena at farm
+                    const elenaDist = Math.hypot((player.x + player.width/2) - (elena.x + elena.width/2), (player.y + player.height/2) - (elena.y + elena.height/2));
+                    if (elenaDist < 55) {
+                        startDialogue('elena_farm_talk');
+                        return;
+                    }
+
+                    // Delivery to Ribamar once 12 harvests collected
+                    const ribamarDist = Math.hypot((player.x + player.width/2) - (ribamar.x + ribamar.width/2), (player.y + player.height/2) - (ribamar.y + ribamar.height/2));
+                    if (ribamarDist < 55) {
+                        if (harvestedCrops >= 12 && !cropsDelivered) {
+                            cropsDelivered = true;
+                            startDialogue('deliver_harvest', triggerWin);
+                            return;
+                        } else {
+                            startDialogue('ribamar_talk');
+                            return;
+                        }
+                    }
+
+                    // Harvest Crops (Total 12)
+                    for (let crop of farmCrops) {
+                        if (!crop.harvested) {
+                            const cropDist = Math.hypot((player.x + player.width/2) - (crop.x + crop.width/2), (player.y + player.height/2) - (crop.y + crop.height/2));
+                            if (cropDist < 40) {
+                                crop.harvested = true;
+                                harvestedCrops++;
+                                audio.playSFX('harvest');
+                                
+                                if (harvestedCrops < 12) {
+                                    hudText.innerText = `🌾 Colheita: ${harvestedCrops}/12 Lavouras`;
+                                } else {
+                                    hudText.innerText = "⭐ Devolva as colheitas para o seu Ribamar!";
+                                }
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkPhase1Progress() {
+            const count = labBenches.filter(b => b.talked).length;
+            if (count === 3) {
+                hudText.innerText = "✨ Excelente! Fale com a Dra. Elena no estacionamento para irem à fazenda!";
+            } else {
+                hudText.innerText = `🔬 Análises concluídas: ${count}/3 bancadas.`;
+            }
+        }
+
+        function startCutsceneToFarm() {
+            gameState = 'CUTSCENE';
+            hudBanner.classList.add('hidden');
+            cutsceneBanner.classList.remove('hidden');
+            cutsceneTruck.x = -120;
+        }
+
+        function triggerWin() {
+            audio.playSFX('win');
+            screenWin.classList.remove('hidden');
+            hudBanner.classList.add('hidden');
+
+            // Spawn falling grape emojis
+            grapeContainer.classList.remove('hidden');
+            grapeContainer.innerHTML = '';
+            for (let i = 0; i < 30; i++) {
+                const grape = document.createElement('div');
+                grape.className = 'falling-grape';
+                grape.innerText = '🍇';
+                grape.style.left = Math.random() * 100 + '%';
+                grape.style.animationDelay = (Math.random() * 2.5) + 's';
+                grapeContainer.appendChild(grape);
+            }
+        }
+
+        function restartGame() {
+            screenGameOver.classList.add('hidden');
+            player.x = 200;
+            player.y = 80;
+            gameState = 'PLAYING';
+        }
+
+        // --- UPDATE GAME LOOP ---
+        function update() {
+            // Update Pedestrians in City
+            if (currentPhase === 1) {
+                for (let ped of pedestrians) {
+                    ped.x += ped.speed * ped.dir;
+                    if (ped.x > canvas.width - 50 || ped.x < 50) ped.dir *= -1;
+                }
+            }
+
+            if (currentPhase === 2 && gameState === 'PLAYING') {
+                // Update Flying Birds
+                for (let bird of farmBirds) {
+                    bird.x += bird.speed;
+                    bird.wingState = (bird.wingState || 0) + 0.15;
+                    if (bird.x > canvas.width + 30) {
+                        bird.x = -30;
+                        bird.y = 20 + Math.random() * 60;
+                    }
+                }
+            }
+
+            if (gameState === 'PLAYING') {
+                let dx = 0;
+                let dy = 0;
+
+                if (keys['w'] || keys['W'] || keys['ArrowUp']) dy -= 1;
+                if (keys['s'] || keys['S'] || keys['ArrowDown']) dy += 1;
+                if (keys['a'] || keys['A'] || keys['ArrowLeft']) dx -= 1;
+                if (keys['d'] || keys['D'] || keys['ArrowRight']) dx += 1;
+
+                if (dx !== 0 || dy !== 0) {
+                    player.isMoving = true;
+                    if (dx < 0) player.direction = 'left';
+                    if (dx > 0) player.direction = 'right';
+                    if (dy < 0) player.direction = 'up';
+                    if (dy > 0) player.direction = 'down';
+
+                    const length = Math.hypot(dx, dy);
+                    player.x += (dx / length) * player.speed;
+                    player.y += (dy / length) * player.speed;
+
+                    player.animTimer++;
+                    if (player.animTimer % 18 === 0) {
+                        player.animFrame = (player.animFrame + 1) % 4;
+                        audio.playSFX('step');
+                    }
+                } else {
+                    player.isMoving = false;
+                    player.animFrame = 0;
+                }
+
+                // Map Boundaries
+                player.x = Math.max(10, Math.min(canvas.width - player.width - 10, player.x));
+                player.y = Math.max(10, Math.min(canvas.height - player.height - 10, player.y));
+
+                // Cars Collision in Phase 1
+                if (currentPhase === 1) {
+                    for (let car of cars) {
+                        car.x += car.speed;
+                        if (car.speed > 0 && car.x > canvas.width + 100) car.x = -100;
+                        if (car.speed < 0 && car.x < -100) car.x = canvas.width + 100;
+
+                        if (
+                            player.x < car.x + car.width &&
+                            player.x + player.width > car.x &&
+                            player.y < car.y + car.height &&
+                            player.y + player.height > car.y
+                        ) {
+                            audio.playSFX('hit');
+                            gameState = 'GAMEOVER';
+                            screenGameOver.classList.remove('hidden');
+                        }
+                    }
+                }
+
+                // Animal Pen Interaction in Phase 2
+                if (currentPhase === 2) {
+                    const penDist = Math.hypot(
+                        (player.x + player.width/2) - (animalPen.x + animalPen.width/2),
+                        (player.y + player.height/2) - (animalPen.y + animalPen.height/2)
+                    );
+
+                    if (penDist < 90 && !animalBittenCooldown) {
+                        animalBittenCooldown = true;
+                        audio.playSFX('bite');
+                        audio.playSFX('pig');
+                        startDialogue('animal_bite', () => {
+                            setTimeout(() => { animalBittenCooldown = false; }, 4000);
+                        });
+                    }
+                }
+            } else if (gameState === 'CUTSCENE') {
+                cutsceneTruck.x += cutsceneTruck.speed;
+                if (cutsceneTruck.x > canvas.width + 100) {
+                    currentPhase = 2;
+                    gameState = 'PLAYING';
+                    cutsceneBanner.classList.add('hidden');
+                    hudBanner.classList.remove('hidden');
+                    hudText.innerText = "🌾 Colha as 12 plantas perto da casa e leve para o Seu Ribamar!";
+
+                    // Side-by-side positioning in Farm
+                    player.x = 110;
+                    player.y = 200;
+
+                    elena.x = 150;
+                    elena.y = 200;
+
+                    ribamar.x = 210;
+                    ribamar.y = 200;
+
+                    setTimeout(() => startDialogue('farm_arrival'), 300);
+                }
+            }
+        }
+
+        // --- CANVAS RENDER ENGINE ---
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (currentPhase === 1) {
+                renderPhase1City();
+            } else {
+                renderPhase2Farm();
+            }
+
+            if (gameState === 'CUTSCENE') {
+                renderCutscene();
+            }
+        }
+
+        // --- RENDER PHASE 1: CITY ---
+        function renderPhase1City() {
+            // North Sidewalk
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(0, 0, canvas.width, 210);
+
+            // Lab Buildings
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 0, 750, 140);
+            ctx.fillStyle = '#38bdf8';
+            ctx.globalAlpha = 0.5;
+            ctx.fillRect(60, 30, 200, 70);
+            ctx.fillRect(400, 30, 200, 70);
+            ctx.globalAlpha = 1.0;
+
+            // Parking Lot (Right)
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(750, 0, 274, 210);
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(750, 0, 274, 210);
+
+            renderPickupTruck(830, 60);
+
+            // Asphalt Road
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 210, canvas.width, 140);
+
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([20, 15]);
+            ctx.beginPath();
+            ctx.moveTo(0, 280); ctx.lineTo(canvas.width, 280);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Pedestrian Crosswalk
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 130; i += 22) {
+                ctx.fillRect(480, 215 + i, 45, 12);
+            }
+
+            // South Sidewalk
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(0, 350, canvas.width, 226);
+
+            drawTree(60, 370);
+            drawTree(930, 370);
+
+            // Render Pedestrians
+            for (let ped of pedestrians) {
+                ctx.fillStyle = ped.type === 'man' ? '#3b82f6' : '#ec4899';
+                ctx.fillRect(ped.x, ped.y, 16, 26);
+                ctx.fillStyle = '#fed7aa';
+                ctx.fillRect(ped.x + 2, ped.y - 8, 12, 10);
+            }
+
+            // Analysis Benches
+            for (let bench of labBenches) {
+                ctx.fillStyle = bench.talked ? '#059669' : '#d97706';
+                ctx.fillRect(bench.x, bench.y, bench.w, bench.h);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(bench.x + 5, bench.y + 5, bench.w - 10, bench.h - 10);
+
+                ctx.fillStyle = bench.id === 'bt_corn' ? '#eab308' : bench.id === 'soya' ? '#22c55e' : '#ef4444';
+                ctx.beginPath();
+                ctx.arc(bench.x + bench.w/2, bench.y + bench.h/2, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '9px "Press Start 2P"';
+                ctx.fillText(bench.label, bench.x - 12, bench.y - 10);
+            }
+
+            // Road Cars
+            for (let car of cars) {
+                ctx.fillStyle = car.color;
+                ctx.fillRect(car.x, car.y, car.width, car.height);
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(car.x + 10, car.y + 4, car.width - 20, 10);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(car.x + 8, car.y - 3, 10, 4);
+                ctx.fillRect(car.x + car.width - 18, car.y - 3, 10, 4);
+                ctx.fillRect(car.x + 8, car.y + car.height - 1, 10, 4);
+                ctx.fillRect(car.x + car.width - 18, car.y + car.height - 1, 10, 4);
+            }
+
+            drawElenaNPC(elena.x, elena.y);
+            drawRobsonPlayer(player.x, player.y);
+        }
+
+        // --- RENDER PHASE 2: FARM WITH ROAD, DISTANT MINI FARMS & BACKGROUND FOREST ---
+        function renderPhase2Farm() {
+            // SKY / HORIZON BACKGROUND (TOP 110px)
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(0, 0, canvas.width, 110);
+
+            // DENSE BACKGROUND FOREST ALONG HORIZON
+            ctx.fillStyle = '#064e3b';
+            for (let fx = -20; fx < canvas.width + 40; fx += 28) {
+                ctx.beginPath();
+                ctx.arc(fx + 14, 85, 24, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // DISTANT MINI FARMS ON HORIZON
+            for (let mx = 80; mx < canvas.width; mx += 260) {
+                // Mini Red Barn
+                ctx.fillStyle = '#991b1b';
+                ctx.fillRect(mx, 60, 24, 18);
+                ctx.fillStyle = '#7f1d1d';
+                ctx.beginPath();
+                ctx.moveTo(mx - 4, 60); ctx.lineTo(mx + 12, 48); ctx.lineTo(mx + 28, 60);
+                ctx.fill();
+
+                // Mini Silo
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(mx + 28, 54, 10, 24);
+                ctx.beginPath();
+                ctx.arc(mx + 33, 54, 5, Math.PI, 0);
+                ctx.fill();
+
+                // Mini Fields
+                ctx.fillStyle = '#a16207';
+                ctx.fillRect(mx + 44, 68, 30, 10);
+            }
+
+            // REALISTIC FLYING BIRDS IN SKY
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 2.5;
+            ctx.lineCap = 'round';
+
+            for (let bird of farmBirds) {
+                const wingY = Math.sin(bird.wingState || 0) * 6;
+                ctx.beginPath();
+                ctx.moveTo(bird.x - 12, bird.y - wingY);
+                ctx.quadraticCurveTo(bird.x - 6, bird.y - 4, bird.x, bird.y);
+                ctx.quadraticCurveTo(bird.x + 6, bird.y - 4, bird.x + 12, bird.y - wingY);
+                ctx.stroke();
+            }
+
+            // MAIN LUSH GREEN GRASS FIELD
+            ctx.fillStyle = '#4a8c3d';
+            ctx.fillRect(0, 110, canvas.width, canvas.height - 110);
+
+            // Subtle grass texture
+            ctx.fillStyle = '#3f7a33';
+            for (let gx = 0; gx < canvas.width; gx += 60) {
+                for (let gy = 120; gy < canvas.height; gy += 60) {
+                    if ((gx + gy) % 120 === 0) {
+                        ctx.fillRect(gx + 10, gy + 15, 20, 8);
+                        ctx.fillRect(gx + 35, gy + 40, 15, 6);
+                    }
+                }
+            }
+
+            // FARM ACCESS ROAD (DIRT/ASPHALT TRACK) ON THE LEFT
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(0, 110, 90, canvas.height - 110);
+            ctx.fillStyle = '#a16207';
+            ctx.fillRect(20, 110, 50, canvas.height - 110);
+
+            // PARKED PICKUP TRUCK ON THE FARM ROAD
+            renderPickupTruck(10, 260);
+
+            // Ribamar's Main Barn House
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(110, 110, 130, 80);
+            ctx.fillStyle = '#991b1b';
+            ctx.beginPath();
+            ctx.moveTo(90, 110); ctx.lineTo(175, 80); ctx.lineTo(260, 110);
+            ctx.fill();
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(155, 145, 35, 45);
+
+            // 4 CROP PATCHES (12 CROPS TOTAL)
+            ctx.strokeStyle = '#b45309';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(245, 245, 150, 200);
+
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(249, 249, 142, 192);
+
+            // Render 12 Farm Crops
+            for (let crop of farmCrops) {
+                if (!crop.harvested) {
+                    if (crop.type.includes('Milho')) {
+                        ctx.fillStyle = '#15803d';
+                        ctx.fillRect(crop.x + 12, crop.y - 8, 10, 32);
+                        ctx.fillStyle = '#facc15';
+                        ctx.beginPath();
+                        ctx.arc(crop.x + 17, crop.y + 4, 9, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (crop.type.includes('Soja')) {
+                        ctx.fillStyle = '#22c55e';
+                        ctx.beginPath();
+                        ctx.arc(crop.x + 17, crop.y + 17, 13, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (crop.type.includes('Algodão')) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(crop.x + 17, crop.y + 17, 12, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.fillStyle = '#a855f7';
+                        ctx.beginPath();
+                        ctx.arc(crop.x + 17, crop.y + 17, 12, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                } else {
+                    ctx.fillStyle = '#a16207';
+                    ctx.fillRect(crop.x + 8, crop.y + 14, 18, 6);
+                }
+            }
+
+            // ANIMAL PEN WITH FENCE (Pigs, Cows, Chickens)
+            ctx.strokeStyle = '#78350f';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(animalPen.x, animalPen.y, animalPen.width, animalPen.height);
+
+            // Mud inside pen
+            ctx.fillStyle = '#854d0e';
+            ctx.fillRect(animalPen.x + 4, animalPen.y + 4, animalPen.width - 8, animalPen.height - 8);
+
+            // Pig 🐷
+            ctx.fillStyle = '#f472b6';
+            ctx.beginPath();
+            ctx.arc(animalPen.x + 40, animalPen.y + 45, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cow 🐮
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(animalPen.x + 75, animalPen.y + 65, 34, 24);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(animalPen.x + 80, animalPen.y + 70, 10, 10);
+            ctx.fillRect(animalPen.x + 95, animalPen.y + 75, 8, 8);
+
+            // Chicken 🐔
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.arc(animalPen.x + 45, animalPen.y + 115, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ef4444';
+            ctx.fillRect(animalPen.x + 43, animalPen.y + 101, 4, 7);
+
+            // Warning Sign on Pen
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(animalPen.x - 10, animalPen.y + 55, 20, 20);
+            ctx.fillStyle = '#000000';
+            ctx.font = '10px "Press Start 2P"';
+            ctx.fillText('⚠️', animalPen.x - 12, animalPen.y + 70);
+
+            // River
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.moveTo(720, 110);
+            ctx.bezierCurveTo(760, 250, 690, 420, 740, 576);
+            ctx.lineTo(800, 576);
+            ctx.bezierCurveTo(750, 420, 820, 250, 780, 110);
+            ctx.closePath();
+            ctx.fill();
+
+            // Bridge
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(700, 310, 100, 40);
+
+            // Render Characters CLOSE TO EACH OTHER (SIDE-BY-SIDE)
+            drawElenaNPC(elena.x, elena.y);
+            drawRibamarNPC(ribamar.x, ribamar.y);
+            drawRobsonPlayer(player.x, player.y);
+        }
+
+        // --- CUTSCENE RENDER ---
+        function renderCutscene() {
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, 360, canvas.width, 120);
+
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 4;
+            ctx.setLineDash([25, 20]);
+            ctx.beginPath();
+            ctx.moveTo(0, 420); ctx.lineTo(canvas.width, 420);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#166534';
+            ctx.beginPath();
+            ctx.arc(200, 400, 250, Math.PI, 0);
+            ctx.arc(700, 400, 300, Math.PI, 0);
+            ctx.fill();
+
+            renderPickupTruck(cutsceneTruck.x, cutsceneTruck.y);
+
+            ctx.fillStyle = '#fca5a5';
+            ctx.fillRect(cutsceneTruck.x + 25, cutsceneTruck.y + 6, 8, 8);
+            ctx.fillStyle = '#fbcfe8';
+            ctx.fillRect(cutsceneTruck.x + 40, cutsceneTruck.y + 6, 8, 8);
+        }
+
+        // --- SPRITE DRAWING FUNCTIONS ---
+        function drawRobsonPlayer(x, y) {
+            ctx.fillStyle = '#1e3a8a';
+            const legOffset = player.isMoving ? Math.sin(player.animTimer * 0.3) * 4 : 0;
+            ctx.fillRect(x + 4, y + 26 + legOffset, 8, 12);
+            ctx.fillRect(x + 16, y + 26 - legOffset, 8, 12);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 2, y + 12, 24, 16);
+            ctx.fillStyle = '#059669';
+            ctx.fillRect(x + 12, y + 12, 4, 12);
+
+            ctx.fillStyle = '#fca5a5';
+            ctx.fillRect(x + 4, y + 2, 20, 12);
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(x + 2, y, 24, 5);
+
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(x + 6, y + 5, 6, 4);
+            ctx.fillRect(x + 16, y + 5, 6, 4);
+
+            ctx.fillStyle = '#fef08a';
+            ctx.font = '8px "Press Start 2P"';
+            ctx.fillText('Robson', x - 8, y - 5);
+        }
+
+        function drawElenaNPC(x, y) {
+            ctx.fillStyle = '#db2777';
+            ctx.fillRect(x + 4, y + 14, 20, 14);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 2, y + 14, 6, 18);
+            ctx.fillRect(x + 20, y + 14, 6, 18);
+
+            ctx.fillStyle = '#fcd34d';
+            ctx.fillRect(x, y - 2, 28, 16);
+            ctx.fillStyle = '#fbcfe8';
+            ctx.fillRect(x + 4, y + 4, 20, 10);
+
+            ctx.fillStyle = '#fef08a';
+            ctx.font = '8px "Press Start 2P"';
+            ctx.fillText('Dra. Elena', x - 18, y - 5);
+        }
+
+        function drawRibamarNPC(x, y) {
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(x + 4, y + 14, 22, 24);
+
+            ctx.fillStyle = '#fed7aa';
+            ctx.fillRect(x + 6, y + 4, 18, 12);
+
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(x - 2, y, 34, 6);
+            ctx.fillRect(x + 4, y - 6, 22, 8);
+
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(x + 8, y + 11, 14, 3);
+
+            ctx.fillStyle = '#fef08a';
+            ctx.font = '8px "Press Start 2P"';
+            ctx.fillText('Seu Ribamar', x - 18, y - 10);
+        }
+
+        function drawTree(x, y) {
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(x + 12, y + 20, 10, 20);
+            ctx.fillStyle = '#166534';
+            ctx.beginPath();
+            ctx.arc(x + 17, y + 12, 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function renderPickupTruck(x, y) {
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(x, y + 10, 75, 22);
+            ctx.fillRect(x + 18, y, 38, 18);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(x + 22, y + 3, 30, 9);
+
+            ctx.fillStyle = '#991b1b';
+            ctx.fillRect(x + 56, y + 12, 16, 10);
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(x + 16, y + 32, 8, 0, Math.PI * 2);
+            ctx.arc(x + 58, y + 32, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // --- MAIN LOOP ---
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.onload = () => {
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
